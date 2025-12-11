@@ -60,14 +60,3 @@ Run the example program to see message handlers, events, and graceful shutdown:
 ```bash
 go run cmd/main.go
 ```
-
-## Notes
-
-No automatic reconnection logic yet. Connection must be manually re-established.
-
-Read timeout should probably refresh on activity, but works fine for now.
-
-Mock transport doesn't simulate network failures, just basic message flow.
-
-Buffer size not yet exposed in the config (easy to add if needed).
-
