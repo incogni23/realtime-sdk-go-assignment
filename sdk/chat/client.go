@@ -36,7 +36,7 @@ func NewClient(config Config) (*Client, error) {
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	transport := NewWebSocketTransport(config.Endpoint, config.APIKey)
+	transport := NewWebSocketTransport(config.Endpoint, config.APIKey, config.Logger)
 
 	client := &Client{
 		config:          config,

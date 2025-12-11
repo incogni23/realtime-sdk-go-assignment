@@ -14,6 +14,7 @@ import (
 type wsTransport struct {
 	endpoint string
 	apiKey   string
+	logger   Logger
 	conn     *websocket.Conn
 	mu       sync.RWMutex
 	ctx      context.Context
@@ -23,11 +24,12 @@ type wsTransport struct {
 }
 
 // NewWebSocketTransport creates a new WebSocket transport instance
-func NewWebSocketTransport(endpoint, apiKey string) Transport {
+func NewWebSocketTransport(endpoint, apiKey string, logger Logger) Transport {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &wsTransport{
 		endpoint: endpoint,
 		apiKey:   apiKey,
+		logger:   logger,
 		ctx:      ctx,
 		cancel:   cancel,
 	}
@@ -43,7 +45,7 @@ func (w *wsTransport) Connect(ctx context.Context) error {
 	}
 
 	dialer := websocket.Dialer{
-		HandshakeTimeout: 10 * time.Second, // TODO: make this configurable?
+		HandshakeTimeout: 10 * time.Second,
 	}
 
 	headers := make(map[string][]string)
@@ -73,6 +75,7 @@ func (w *wsTransport) Disconnect() error {
 	w.wg.Wait()
 	if w.msgChan != nil {
 		close(w.msgChan)
+		w.msgChan = nil
 	}
 	return err
 }
@@ -125,7 +128,7 @@ func (w *wsTransport) StartListening() (<-chan *Message, error) {
 		return nil, ErrNotConnected
 	}
 
-	w.msgChan = make(chan *Message, 100) // buffer size might need tuning
+	w.msgChan = make(chan *Message, 100)
 	conn := w.conn
 
 	w.wg.Add(1)
@@ -162,7 +165,6 @@ func (w *wsTransport) listen(conn *websocket.Conn) {
 				return
 			default:
 				// channel full, drop message
-				// TODO: maybe add metrics/logging here?
 			}
 		}
 	}
